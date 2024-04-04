@@ -1,7 +1,10 @@
 package graphqldemo
 
+import "gorm.io/gorm"
+
 type User struct {
-	ID          int    `json:"id"`
+	gorm.Model
+	ID          uint   `gorm: "primaryKey"`
 	FirstName   string `json:"firstName"`
 	LastName    string `json:"lastName"`
 	Email       string `json:"email"`
