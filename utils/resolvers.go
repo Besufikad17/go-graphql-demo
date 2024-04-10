@@ -1,6 +1,8 @@
 package graphqldemo
 
 import (
+	"errors"
+
 	handlers "github.com/Besufikad17/graphqldemo/handlers"
 	models "github.com/Besufikad17/graphqldemo/models"
 	"github.com/graphql-go/graphql"
@@ -68,13 +70,17 @@ var QueryType = graphql.NewObject(graphql.ObjectConfig{
 				},
 			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				id, _ := p.Args["id"].(int)
-				for i := 0; i < len(Users); i++ {
-					if int(Users[i].ID) == id {
-						return Users[i], nil
-					}
+				id := p.Args["id"].(int)
+				if p.Args["id"] == nil {
+					return nil, errors.New("Please enter id!!")
 				}
-				return nil, nil
+				userHandler := handlers.NewUserHandler(DB)
+				user, err := userHandler.GetUserById(id)
+
+				if err != nil {
+					return nil, err
+				}
+				return user, nil
 			},
 		},
 	},

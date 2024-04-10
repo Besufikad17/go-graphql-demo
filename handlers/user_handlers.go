@@ -26,3 +26,9 @@ func (h handler) GetAllUsers(skip *int, take *int, text *string) (interface{}, e
 	h.DB.Limit(*take).Offset(*skip).Where("first_name LIKE ? OR last_name LIKE ?", "%"+*text+"%", "%"+*text+"%").Find(&users)
 	return users, nil
 }
+
+func (h handler) GetUserById(id int) (interface{}, error) {
+	var user = models.User{ID: uint(id)}
+	h.DB.Find(&user)
+	return user, nil
+}
