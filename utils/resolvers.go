@@ -18,8 +18,46 @@ var QueryType = graphql.NewObject(graphql.ObjectConfig{
 	Fields: graphql.Fields{
 		"users": &graphql.Field{
 			Type: graphql.NewList(UserType),
+			Args: graphql.FieldConfigArgument{
+				"skip": &graphql.ArgumentConfig{
+					Type: graphql.Int,
+				},
+				"take": &graphql.ArgumentConfig{
+					Type: graphql.Int,
+				},
+				"text": &graphql.ArgumentConfig{
+					Type: graphql.String,
+				},
+			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				return Users, nil
+				var skip int
+				var take int
+				var text string
+
+				if p.Args["skip"] == nil {
+					skip = 0
+				} else {
+					skip = p.Args["skip"].(int)
+				}
+
+				if p.Args["take"] == nil {
+					take = 10
+				} else {
+					take = p.Args["take"].(int)
+				}
+
+				if p.Args["text"] == nil {
+					text = ""
+				} else {
+					text = p.Args["text"].(string)
+				}
+
+				userHandler := handlers.NewUserHandler(DB)
+				users, err := userHandler.GetAllUsers(&skip, &take, &text)
+				if err != nil {
+					return nil, err
+				}
+				return users, nil
 			},
 		},
 		"user": &graphql.Field{

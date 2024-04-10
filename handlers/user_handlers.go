@@ -21,8 +21,8 @@ func (h handler) AddUser(user *models.User) (interface{}, error) {
 	return user, nil
 }
 
-func (h handler) GetAllUsers() {
-	var users = []models.User{}
-	result := h.DB.Find(&users)
-	println(result)
+func (h handler) GetAllUsers(skip *int, take *int, text *string) (interface{}, error) {
+	var users []models.User
+	h.DB.Limit(*take).Offset(*skip).Where("first_name LIKE ? OR last_name LIKE ?", "%"+*text+"%", "%"+*text+"%").Find(&users)
+	return users, nil
 }

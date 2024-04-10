@@ -7,5 +7,5 @@ type User {
 }
 
 type Query {
-	users: [User!]!
+	users(skip: Int!, take: Int!, text: String!): [User!]!
 }
