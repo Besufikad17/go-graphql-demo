@@ -19,7 +19,8 @@ var QueryType = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Query",
 	Fields: graphql.Fields{
 		"users": &graphql.Field{
-			Type: graphql.NewList(UserType),
+			Type:        graphql.NewList(UserType),
+			Description: "Get All users",
 			Args: graphql.FieldConfigArgument{
 				"skip": &graphql.ArgumentConfig{
 					Type: graphql.Int,
@@ -63,17 +64,22 @@ var QueryType = graphql.NewObject(graphql.ObjectConfig{
 			},
 		},
 		"user": &graphql.Field{
-			Type: UserType,
+			Type:        UserType,
+			Description: "Get user by Id",
 			Args: graphql.FieldConfigArgument{
 				"id": &graphql.ArgumentConfig{
 					Type: graphql.Int,
 				},
 			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				id := p.Args["id"].(int)
+				var id int
+
 				if p.Args["id"] == nil {
 					return nil, errors.New("Please enter id!!")
+				} else {
+					id = p.Args["id"].(int)
 				}
+
 				userHandler := handlers.NewUserHandler(DB)
 				user, err := userHandler.GetUserById(id)
 
@@ -90,7 +96,8 @@ var MutationType = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Mutation",
 	Fields: graphql.Fields{
 		"add": &graphql.Field{
-			Type: UserType,
+			Type:        UserType,
+			Description: "Add user",
 			Args: graphql.FieldConfigArgument{
 				"firstName": &graphql.ArgumentConfig{
 					Type: graphql.NewNonNull(graphql.String),
@@ -120,6 +127,34 @@ var MutationType = graphql.NewObject(graphql.ObjectConfig{
 				}
 
 				return createdUser, nil
+			},
+		},
+		"delete": &graphql.Field{
+			Type:        MessageType,
+			Description: "Delete user by id",
+			Args: graphql.FieldConfigArgument{
+				"id": &graphql.ArgumentConfig{
+					Type: graphql.Int,
+				},
+			},
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				var id int
+
+				if p.Args["id"] == nil {
+					return nil, errors.New("Please enter id!!")
+				} else {
+					id = p.Args["id"].(int)
+				}
+
+				userHandler := handlers.NewUserHandler(DB)
+				_, err := userHandler.DeleteUser(id)
+
+				if err != nil {
+					return nil, err
+				}
+				return models.Message{
+					Text: "User Deleted successfully",
+				}, nil
 			},
 		},
 	},

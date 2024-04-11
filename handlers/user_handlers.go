@@ -32,3 +32,9 @@ func (h handler) GetUserById(id int) (interface{}, error) {
 	h.DB.Find(&user)
 	return user, nil
 }
+
+func (h handler) DeleteUser(id int) (interface{}, error) {
+	var user = models.User{ID: uint(id)}
+	h.DB.Delete(&user)
+	return user, nil
+}

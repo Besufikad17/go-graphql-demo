@@ -24,3 +24,14 @@ var UserType = graphql.NewObject(
 		},
 	},
 )
+
+var MessageType = graphql.NewObject(
+	graphql.ObjectConfig{
+		Name: "Message",
+		Fields: graphql.Fields{
+			"text": &graphql.Field{
+				Type: graphql.String,
+			},
+		},
+	},
+)

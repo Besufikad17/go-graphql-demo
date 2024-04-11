@@ -10,3 +10,7 @@ type User struct {
 	Email       string `json:"email"`
 	PhoneNumber string `json:"phoneNumber"`
 }
+
+type Message struct {
+	Text string
+}
