@@ -129,6 +129,48 @@ var MutationType = graphql.NewObject(graphql.ObjectConfig{
 				return createdUser, nil
 			},
 		},
+		"update": &graphql.Field{
+			Type:        UserType,
+			Description: "Update user",
+			Args: graphql.FieldConfigArgument{
+				"id": &graphql.ArgumentConfig{
+					Type: graphql.Int,
+				},
+				"firstName": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+				"lastName": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+				"email": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+				"phoneNumber": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+			},
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				if p.Args["id"] == nil || p.Args["firstName"] == nil || p.Args["lastName"] == nil || p.Args["email"] == nil || p.Args["phoneNumber"] == nil {
+					return nil, errors.New("Please enter all fields!!")
+				}
+
+				user := &models.User{
+					FirstName:   p.Args["firstName"].(string),
+					LastName:    p.Args["lastName"].(string),
+					Email:       p.Args["email"].(string),
+					PhoneNumber: p.Args["phoneNumber"].(string),
+				}
+
+				userHandler := handlers.NewUserHandler(DB)
+				createdUser, err := userHandler.UpdateUser(uint(p.Args["id"].(int)), user) // Pass the address of the user struct
+				if err != nil {
+					return nil, err
+				}
+
+				return createdUser, nil
+				return nil, nil
+			},
+		},
 		"delete": &graphql.Field{
 			Type:        MessageType,
 			Description: "Delete user by id",

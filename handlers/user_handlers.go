@@ -36,5 +36,10 @@ func (h handler) GetUserById(id int) (interface{}, error) {
 func (h handler) DeleteUser(id int) (interface{}, error) {
 	var user = models.User{ID: uint(id)}
 	h.DB.Delete(&user)
+	return nil, nil
+}
+
+func (h handler) UpdateUser(id uint, user *models.User) (interface{}, error) {
+	h.DB.Model(user).Where("id = ?", id).Updates(user)
 	return user, nil
 }
