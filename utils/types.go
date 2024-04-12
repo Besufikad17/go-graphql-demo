@@ -35,3 +35,17 @@ var MessageType = graphql.NewObject(
 		},
 	},
 )
+
+var AuthResponseType = graphql.NewObject(
+	graphql.ObjectConfig{
+		Name: "AuthResponse",
+		Fields: graphql.Fields{
+			"message": &graphql.Field{
+				Type: graphql.String,
+			},
+			"token": &graphql.Field{
+				Type: graphql.String,
+			},
+		},
+	},
+)

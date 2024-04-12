@@ -2,7 +2,6 @@ package graphqldemo
 
 import (
 	"errors"
-
 	handlers "github.com/Besufikad17/graphqldemo/handlers"
 	models "github.com/Besufikad17/graphqldemo/models"
 	"github.com/graphql-go/graphql"
@@ -95,6 +94,53 @@ var QueryType = graphql.NewObject(graphql.ObjectConfig{
 var MutationType = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Mutation",
 	Fields: graphql.Fields{
+		"signup": &graphql.Field{
+			Type:        AuthResponseType,
+			Description: "Admin signup",
+			Args: graphql.FieldConfigArgument{
+				"firstName": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+				"lastName": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+				"email": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+				"phoneNumber": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+				"password": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+			},
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				if p.Args["firstName"] == nil || p.Args["lastName"] == nil ||
+					p.Args["email"] == nil || p.Args["phoneNumber"] == nil || p.Args["password"] == nil {
+					return nil, errors.New("Please enter all fields!!")
+				}
+
+				user := &models.User{
+					FirstName:   p.Args["firstName"].(string),
+					LastName:    p.Args["lastName"].(string),
+					Email:       p.Args["email"].(string),
+					PhoneNumber: p.Args["phoneNumber"].(string),
+					Password:    p.Args["password"].(string),
+					Role:        models.Admin,
+				}
+
+				authHandler := handlers.NewAuthHandler(DB)
+				token, err := authHandler.SignUp(user) // Pass the address of the user struct
+				if err != nil {
+					return nil, err
+				}
+
+				return models.AuthResponse{
+					Message: "User Signed up successfully",
+					Token:   token.(string),
+				}, nil
+			},
+		},
 		"add": &graphql.Field{
 			Type:        UserType,
 			Description: "Add user",
@@ -113,15 +159,22 @@ var MutationType = graphql.NewObject(graphql.ObjectConfig{
 				},
 			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				if p.Args["firstName"] == nil || p.Args["lastName"] == nil ||
+					p.Args["email"] == nil || p.Args["phoneNumber"] == nil || p.Args["password"] == nil {
+					return nil, errors.New("Please enter all fields!!")
+				}
+
 				user := &models.User{
 					FirstName:   p.Args["firstName"].(string),
 					LastName:    p.Args["lastName"].(string),
 					Email:       p.Args["email"].(string),
 					PhoneNumber: p.Args["phoneNumber"].(string),
+					Role:        models.Customer,
+					Password:    "",
 				}
 
 				userHandler := handlers.NewUserHandler(DB)
-				createdUser, err := userHandler.AddUser(user) // Pass the address of the user struct
+				createdUser, err := userHandler.AddUser(user)
 				if err != nil {
 					return nil, err
 				}
@@ -162,13 +215,12 @@ var MutationType = graphql.NewObject(graphql.ObjectConfig{
 				}
 
 				userHandler := handlers.NewUserHandler(DB)
-				createdUser, err := userHandler.UpdateUser(uint(p.Args["id"].(int)), user) // Pass the address of the user struct
+				updatedUser, err := userHandler.UpdateUser(uint(p.Args["id"].(int)), user) // Pass the address of the user struct
 				if err != nil {
 					return nil, err
 				}
 
-				return createdUser, nil
-				return nil, nil
+				return updatedUser, nil
 			},
 		},
 		"delete": &graphql.Field{

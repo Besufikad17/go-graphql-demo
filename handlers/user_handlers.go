@@ -2,6 +2,7 @@ package handlers
 
 import (
 	models "github.com/Besufikad17/graphqldemo/models"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -14,6 +15,14 @@ func NewUserHandler(db *gorm.DB) handler {
 }
 
 func (h handler) AddUser(user *models.User) (interface{}, error) {
+	password := []byte(user.Password)
+
+	hashedPassword, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+
+	user.Password = string(hashedPassword)
 	result := h.DB.Create(user)
 	if result.Error != nil {
 		return nil, result.Error
