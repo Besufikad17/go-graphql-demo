@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	models "github.com/Besufikad17/graphqldemo/models"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -15,6 +16,14 @@ func NewUserHandler(db *gorm.DB) handler {
 }
 
 func (h handler) AddUser(user *models.User) (interface{}, error) {
+	var userInDB *models.User
+
+	err := h.DB.Where("email = ? OR phone_number = ?", &user.Email, &user.PhoneNumber).First(&userInDB).Error
+
+	if err == nil {
+		return nil, errors.New("Email or Phone number already in use!!")
+	}
+
 	password := []byte(user.Password)
 
 	hashedPassword, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)

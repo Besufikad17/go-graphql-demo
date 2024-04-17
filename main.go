@@ -3,15 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	db "github.com/Besufikad17/graphqldemo/db"
-	utils "github.com/Besufikad17/graphqldemo/utils"
+	resolvers "github.com/Besufikad17/graphqldemo/resolvers"
 	"github.com/graphql-go/graphql"
 	"net/http"
 )
 
 var Schema, _ = graphql.NewSchema(graphql.SchemaConfig{
-	Query:    utils.QueryType,
-	Mutation: utils.MutationType,
+	Query:    resolvers.QueryType,
+	Mutation: resolvers.MutationType,
 })
 
 func executeQuery(query string, schema graphql.Schema) *graphql.Result {
@@ -26,8 +25,6 @@ func executeQuery(query string, schema graphql.Schema) *graphql.Result {
 }
 
 func main() {
-	DB := db.Init()
-	utils.NewResolver(DB)
 	http.HandleFunc("/graphql", func(w http.ResponseWriter, r *http.Request) {
 		result := executeQuery(r.URL.Query().Get("query"), Schema)
 		json.NewEncoder(w).Encode(result)
