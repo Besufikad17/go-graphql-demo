@@ -14,28 +14,28 @@ func NewAuthHandler(db *gorm.DB) handler {
 }
 
 func (h handler) SignUp(user *models.User) (interface{}, error) {
-	password := []byte(user.Password)
-	var userInDB *models.User
+	var existingUser models.User
+	err := h.DB.Where("email = ? OR phone_number = ?", &user.Email, &user.PhoneNumber).Find(&existingUser).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		password := []byte(user.Password)
+		hashedPassword, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
 
-	err := h.DB.Where("email = ? OR phone_number = ?", &user.Email, &user.PhoneNumber).First(&userInDB).Error
+		if err != nil {
+			return nil, err
+		}
 
-	if err == nil {
-		return nil, errors.New("Email or Phone number already in use!!")
+		token, err := services.CreateToken(*user)
+
+		user.Password = string(hashedPassword)
+		result := h.DB.Create(user)
+
+		if result.Error != nil {
+			return nil, result.Error
+		}
+		return token, nil
+	} else {
+		return nil, errors.New("Email or phone number already in use")
 	}
-
-	hashedPassword, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
-	if err != nil {
-		return nil, err
-	}
-
-	token, err := services.CreateToken(*user)
-
-	user.Password = string(hashedPassword)
-	result := h.DB.Create(user)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	return token, nil
 }
 
 func (h handler) Login(loginText string, password string) (interface{}, error) {
@@ -49,7 +49,6 @@ func (h handler) Login(loginText string, password string) (interface{}, error) {
 	}
 
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	println(*&user.Email)
 
 	if err == nil {
 		newToken, _ := services.CreateToken(*user)

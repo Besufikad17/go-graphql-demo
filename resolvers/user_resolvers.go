@@ -4,6 +4,7 @@ import (
 	"errors"
 	handlers "github.com/Besufikad17/graphqldemo/handlers"
 	models "github.com/Besufikad17/graphqldemo/models"
+	services "github.com/Besufikad17/graphqldemo/services"
 	utils "github.com/Besufikad17/graphqldemo/utils"
 	"github.com/graphql-go/graphql"
 	"gorm.io/gorm"
@@ -25,6 +26,11 @@ func GetAllUsersResolver(DB *gorm.DB) *graphql.Field {
 			},
 		},
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			err := services.VerifyToken(p.Context.Value("token").(string))
+			if err != nil {
+				return nil, err
+			}
+
 			var skip int
 			var take int
 			var text string
@@ -67,6 +73,11 @@ func GetUserByIdResolver(DB *gorm.DB) *graphql.Field {
 			},
 		},
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			err := services.VerifyToken(p.Context.Value("token").(string))
+			if err != nil {
+				return nil, err
+			}
+
 			var id int
 
 			if p.Args["id"] == nil {
@@ -105,6 +116,11 @@ func AddUserResolver(DB *gorm.DB) *graphql.Field {
 			},
 		},
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			err := services.VerifyToken(p.Context.Value("token").(string))
+			if err != nil {
+				return nil, err
+			}
+
 			if p.Args["firstName"] == nil || p.Args["lastName"] == nil ||
 				p.Args["email"] == nil || p.Args["phoneNumber"] == nil {
 				return nil, errors.New("Please enter all fields!!")
@@ -152,6 +168,11 @@ func UpdateUserResolver(DB *gorm.DB) *graphql.Field {
 			},
 		},
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			err := services.VerifyToken(p.Context.Value("token").(string))
+			if err != nil {
+				return nil, err
+			}
+
 			if p.Args["id"] == nil || p.Args["firstName"] == nil || p.Args["lastName"] == nil || p.Args["email"] == nil || p.Args["phoneNumber"] == nil {
 				return nil, errors.New("Please enter all fields!!")
 			}
@@ -184,6 +205,11 @@ func DeleteUserResolver(DB *gorm.DB) *graphql.Field {
 			},
 		},
 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+			err := services.VerifyToken(p.Context.Value("token").(string))
+			if err != nil {
+				return nil, err
+			}
+
 			var id int
 
 			if p.Args["id"] == nil {
@@ -193,10 +219,10 @@ func DeleteUserResolver(DB *gorm.DB) *graphql.Field {
 			}
 
 			userHandler := handlers.NewUserHandler(DB)
-			_, err := userHandler.DeleteUser(id)
+			_, error := userHandler.DeleteUser(id)
 
-			if err != nil {
-				return nil, err
+			if error != nil {
+				return nil, error
 			}
 			return models.Message{
 				Text: "User Deleted successfully",

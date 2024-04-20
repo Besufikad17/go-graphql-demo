@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	resolvers "github.com/Besufikad17/graphqldemo/resolvers"
@@ -13,10 +14,11 @@ var Schema, _ = graphql.NewSchema(graphql.SchemaConfig{
 	Mutation: resolvers.MutationType,
 })
 
-func executeQuery(query string, schema graphql.Schema) *graphql.Result {
+func executeQuery(query string, schema graphql.Schema, token string) *graphql.Result {
 	result := graphql.Do(graphql.Params{
 		Schema:        schema,
 		RequestString: query,
+		Context:       context.WithValue(context.Background(), "token", token),
 	})
 	if len(result.Errors) > 0 {
 		fmt.Printf("errors: %v", result.Errors)
@@ -26,7 +28,8 @@ func executeQuery(query string, schema graphql.Schema) *graphql.Result {
 
 func main() {
 	http.HandleFunc("/graphql", func(w http.ResponseWriter, r *http.Request) {
-		result := executeQuery(r.URL.Query().Get("query"), Schema)
+		tokenString := r.Header.Get("Authorization")
+		result := executeQuery(r.URL.Query().Get("query"), Schema, tokenString)
 		json.NewEncoder(w).Encode(result)
 	})
 	http.ListenAndServe(":8000", nil)

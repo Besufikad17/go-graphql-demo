@@ -16,27 +16,25 @@ func NewUserHandler(db *gorm.DB) handler {
 }
 
 func (h handler) AddUser(user *models.User) (interface{}, error) {
-	var userInDB *models.User
+	var existingUser models.User
+	err := h.DB.Where("email = ? OR phone_number = ?", &user.Email, &user.PhoneNumber).Find(&existingUser).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		password := []byte(user.Password)
 
-	err := h.DB.Where("email = ? OR phone_number = ?", &user.Email, &user.PhoneNumber).First(&userInDB).Error
+		hashedPassword, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
+		if err != nil {
+			return nil, err
+		}
 
-	if err == nil {
-		return nil, errors.New("Email or Phone number already in use!!")
+		user.Password = string(hashedPassword)
+		result := h.DB.Create(user)
+		if result.Error != nil {
+			return nil, result.Error
+		}
+		return user, nil
+	} else {
+		return nil, errors.New("Email or phone number already in use")
 	}
-
-	password := []byte(user.Password)
-
-	hashedPassword, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
-	if err != nil {
-		return nil, err
-	}
-
-	user.Password = string(hashedPassword)
-	result := h.DB.Create(user)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	return user, nil
 }
 
 func (h handler) GetAllUsers(skip *int, take *int, text *string) (interface{}, error) {
